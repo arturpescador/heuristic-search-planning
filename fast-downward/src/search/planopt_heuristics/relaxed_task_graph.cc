@@ -1,6 +1,8 @@
 #include "relaxed_task_graph.h"
 
 #include <iostream>
+#include <queue>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -17,6 +19,36 @@ RelaxedTaskGraph::RelaxedTaskGraph(const TaskProxy &task_proxy)
         - the graph should contain precondition and effect nodes for all operators
         - the graph should contain all necessary edges.
     */
+
+    // #### exercise 2(b)
+    // 1. OR node for every proposition
+    for (size_t i = 0; i < relaxed_task.propositions.size(); i++) {
+        variable_node_ids[i] = graph.add_node(NodeType::OR);
+    }
+
+    // 2. Initial-state AND node (no successors → trivially forced true at the start)
+    initial_node_id = graph.add_node(NodeType::AND);
+    for (PropositionID id : relaxed_task.initial_state) {
+        graph.add_edge(variable_node_ids[id], initial_node_id);
+    }
+
+    // 3. Goal AND node — forced true when every goal proposition is achievable
+    goal_node_id = graph.add_node(NodeType::AND);
+    for (PropositionID id : relaxed_task.goal) {
+        graph.add_edge(goal_node_id, variable_node_ids[id]);
+    }
+
+    // 4. One AND node per operator (direct_cost = op.cost set in exercise 2c)
+    for (const RelaxedOperator &op : relaxed_task.operators) {
+        NodeID op_node = graph.add_node(NodeType::AND, op.cost);
+        for (PropositionID pre : op.preconditions) {
+            graph.add_edge(op_node, variable_node_ids[pre]);
+        }
+        for (PropositionID eff : op.effects) {
+            graph.add_edge(variable_node_ids[eff], op_node);
+        }
+    }
+    // #### end exercise 2(b)
 }
 
 void RelaxedTaskGraph::change_initial_state(const State &state) {
@@ -37,7 +69,10 @@ bool RelaxedTaskGraph::is_goal_relaxed_reachable() {
     // Compute the most conservative valuation of the graph and use it to
     // return true iff the goal is reachable in the relaxed task.
 
-    return false;
+    // #### exercise 2(b)
+    graph.most_conservative_valuation();
+    return graph.get_node(goal_node_id).forced_true;
+    // #### end exercise 2(b)
 }
 
 int RelaxedTaskGraph::additive_cost_of_goal() {
