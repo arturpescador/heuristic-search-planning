@@ -1,0 +1,23 @@
+# Fast Downward build output
+fast-downward/builds/
+fast-downward/bin/
+
+# Generated plan files
+sas_plan
+sas_plan.*
+*.sas
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# LaTeX (track only .pdf)
+*.tex
+*.aux
+*.log
+*.out
+*.toc
