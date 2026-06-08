@@ -86,8 +86,35 @@ int RelaxedTaskGraph::additive_cost_of_goal() {
 }
 
 int RelaxedTaskGraph::ff_cost_of_goal() {
-    // TODO: add your code for exercise 2 (e) here.
-    return -1;
+    // #### exercise 2(e)
+    graph.weighted_most_conservative_valuation();
+
+    unordered_set<NodeID> collected;
+    queue<NodeID> to_process;
+    to_process.push(goal_node_id);
+
+    while (!to_process.empty()) {
+        NodeID id = to_process.front();
+        to_process.pop();
+        if (collected.count(id))
+            continue;
+        collected.insert(id);
+
+        const AndOrGraphNode &node = graph.get_node(id);
+        if (node.type == NodeType::AND) {
+            for (NodeID succ_id : node.successor_ids)
+                to_process.push(succ_id);
+        } else { // OR: follow only the best achiever
+            if (node.achiever != -1)
+                to_process.push(node.achiever);
+        }
+    }
+
+    int total = 0;
+    for (NodeID id : collected)
+        total += graph.get_node(id).direct_cost;
+    return total;
+    // #### end exercise 2(e)
 }
 
 }
